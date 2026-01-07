@@ -2,11 +2,13 @@
 
 A self-contained implementation of the inverse-trigamma function used in variational inference, empirical bayes, etc.
 
-Written in C (`src/itrigamma.c`) with fast bindings for Python (`python/citrigamma.pyx`) and R (`r/RCall_itrigamma.c`).
+* Written in C with fast bindings for Python (`python/citrigamma.pyx`) and R (`r/RCall_itrigamma.c`).
 
-* `python -m pip install itrigamma`
+**Install**
 
-Test:
+`python -m pip install itrigamma`
+
+**Test**
 
 ```
 python -c "import time, numpy as np
