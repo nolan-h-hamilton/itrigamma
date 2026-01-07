@@ -9,7 +9,7 @@ References:
 - An overview of Euler-Maclaurin summation can be found in Chapter 4 of Sedgewick & Flajolet, "An Introduction to the Analysis of Algorithms"
 
 -----------
-The variance of a random variable log(X), where X ~ chi^2(d) is trigamma(d/2).
+The variance of a random variable log(X), where X ~ chi^2(d) is pos_trigamma(d/2).
 
 To solve
 
@@ -20,7 +20,7 @@ for d requires computing the inverse trigamma function:
     d = 2*trigamma^{-1}(V)
 
 There's not a closed-form expression, and I haven't found a dedicated inverse
-trigamma implementation in numpy, scipy, etc. to call in the EB update for Consenrich.
+trigamma implementation in numpy, scipy, etc. to call in the munctrack EB update for Consenrich.
 
 -----------
 
@@ -95,7 +95,7 @@ static inline double eps_invSqrtX(void)
     return 1.0 / sqrt(DBL_MAX);
 }
 
-double trigamma(double x)
+double pos_trigamma(double x)
 {
     double result;
     double reciprocalX;
@@ -162,7 +162,7 @@ double trigamma(double x)
     return result;
 }
 
-double tetragamma(double x)
+double pos_tetragamma(double x)
 {
     double result;
     double reciprocalX;
@@ -265,12 +265,12 @@ double itrigamma(double y)
     lowerBound = fmax(minX, 0.5 * currentX); /* avoid zero or negative */
     upperBound =
         fmax(lowerBound * 2.0, currentX); /* ensure upper >= curr, lower */
-    lowerResidual = trigamma(lowerBound) - y;
+    lowerResidual = pos_trigamma(lowerBound) - y;
 
     if (!isfinite(lowerResidual))
         lowerResidual = INFINITY;
 
-    upperResidual = trigamma(upperBound) - y;
+    upperResidual = pos_trigamma(upperBound) - y;
 
     if (!isfinite(upperResidual))
         upperResidual = -y;
@@ -283,7 +283,7 @@ double itrigamma(double y)
         if (upperBound > 1e100)
             return NAN;
 
-        upperResidual = trigamma(upperBound) - y;
+        upperResidual = pos_trigamma(upperBound) - y;
 
         if (!isfinite(upperResidual))
             upperResidual = -y;
@@ -295,7 +295,7 @@ double itrigamma(double y)
         if (lowerBound < minX)
             lowerBound = minX;
 
-        lowerResidual = trigamma(lowerBound) - y;
+        lowerResidual = pos_trigamma(lowerBound) - y;
 
         if (!isfinite(lowerResidual))
             lowerResidual = INFINITY;
@@ -305,7 +305,7 @@ double itrigamma(double y)
         return NAN;
 
     /*
-     * Newton-raphson iteration to find the root: trigamma(x) - y == 0
+     * Newton-raphson iteration to find the root: pos_trigamma(x) - y == 0
      */
     for (int iter = 0; iter < INVERSE_TRIGAMMA_NEWTON_MAX_ITER; iter++) {
         double functionValue;
@@ -314,7 +314,7 @@ double itrigamma(double y)
         double boundedInterval;
         double xTolerance;
 
-        functionValue = trigamma(currentX) - y;
+        functionValue = pos_trigamma(currentX) - y;
 
         /* we're optimizing over [minX, +infinity)*/
         if (!isfinite(functionValue)) {
@@ -343,7 +343,7 @@ double itrigamma(double y)
         if (boundedInterval <= xTolerance)
             return 0.5 * (lowerBound + upperBound);
 
-        grad_ = tetragamma(currentX);
+        grad_ = pos_tetragamma(currentX);
         if (!isfinite(grad_))
             grad_ = 0.0;
 
@@ -373,7 +373,7 @@ double itrigamma(double y)
         double midpointTolerance;
         double funcTol = INVERSE_TRIGAMMA_FUNC_REL_TOL * fmax(y, 1.0);
         midpoint = 0.5 * (lowerBound + upperBound);
-        midpointResidual = trigamma(midpoint) - y;
+        midpointResidual = pos_trigamma(midpoint) - y;
 
         if (fabs(midpointResidual) <= funcTol)
             return midpoint;
@@ -397,16 +397,16 @@ double itrigamma(double y)
 }
 
 /*vectorization: trigamma, tetragamma, inverse*/
-void trigamma_vec(const double *x, double *out, size_t n)
+void pos_trigamma_vec(const double *x, double *out, size_t n)
 {
 for (size_t i = 0; i < n; i++)
-out[i] = trigamma(x[i]);
+out[i] = pos_trigamma(x[i]);
 }
 
-void tetragamma_vec(const double *x, double *out, size_t n)
+void pos_tetragamma_vec(const double *x, double *out, size_t n)
 {
 for (size_t i = 0; i < n; i++)
-out[i] = tetragamma(x[i]);
+out[i] = pos_tetragamma(x[i]);
 }
 
 void itrigamma_vec(const double *y, double *out, size_t n)
