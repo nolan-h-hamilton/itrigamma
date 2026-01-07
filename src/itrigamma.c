@@ -53,14 +53,6 @@ We need trigamma and its derivative (tetragamma) for Newton-Raphson:
 
 
 ------------
-
-Build for R:
-
-    R CMD SHLIB itrigamma.c RCall_itrigamma.c -o itrigamma.so
-
-Build for Python:
-
-    python setup.py build_ext --inplace
 */
 
 static const double BEGIN_ASYMPTOTIC = 10.0; /*overkill but still fast for now */

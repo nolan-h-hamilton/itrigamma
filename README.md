@@ -1,2 +1,3 @@
 # itrigamma
-a small+self-contained implementation of the inverse trigamma function
+
+A dedicated inverse-trigamma implementation in C with R/Python wrappers
