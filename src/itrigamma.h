@@ -1,17 +1,16 @@
 #ifndef ITRIGAMMA_H
 #define ITRIGAMMA_H
 
-/* in case we call from Rcpp */
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stddef.h>
 
 double trigamma(double x);
 double tetragamma(double x);
 double itrigamma(double y);
 
-#ifdef __cplusplus
-}
-#endif
+/* array-level versions for each */
+void trigamma_vec(const double *x, double *out, size_t n);
+void tetragamma_vec(const double *x, double *out, size_t n);
+void itrigamma_vec(const double *y, double *out, size_t n);
 
 #endif
+

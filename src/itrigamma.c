@@ -1,7 +1,13 @@
 #include <float.h>
 #include <math.h>
+#include <stddef.h>
 
 /*
+References:
+
+    - All recurrences, asymptotic expansions can be found in Abramowitz & Stegun, "Handbook of Mathematical Functions", Section 6.4
+    - An overview of Euler-Maclaurin summation can be found in Chapter 4 of Sedgewick & Flajolet, "An Introduction to the Analysis of Algorithms"
+
 -----------
 The variance of a random variable log(X), where X ~ chi^2(d)$ is trigamma(d/2).
 
@@ -19,8 +25,6 @@ trigamma implementation in numpy, scipy, etc. to call in the EB update for Conse
 -----------
 
 *Recurrences*
-
-See Abramowitz & Stegun, Section 6.4
 
 We use exact recurrences for small x before applying asymptotic expansions for large x:
 
@@ -47,12 +51,23 @@ We need trigamma and its derivative (tetragamma) for Newton-Raphson:
     psi'(z) ~ 1/z + 1/(2 z^2) + 1/(6 z^3) - 1/(30 z^5) + 1/(42 z^7) - 1/(30 z^9) + 5/(66 z^11) - 691/(2730 z^13) + 7/(6 z^15) ...
     psi''(z) ~ -1/z^2 - 1/z^3 - 1/(2 z^4) + 1/(6 z^6) - 1/(6 z^8) + 3/(10 z^10) - 5/(6 z^12) + 691/(210 z^14) - 35/(2 z^16) ...
 
+
+------------
+
+Build for R:
+
+    R CMD SHLIB itrigamma.c RCall_itrigamma.c -o itrigamma.so
+
+Build for Python:
+
+    python setup.py build_ext --inplace
 */
 
-static const double BEGIN_ASYMPTOTIC = 8.0;
+static const double BEGIN_ASYMPTOTIC = 10.0; /*overkill but still fast for now */
 static const double INVERSE_TRIGAMMA_Y_BIG = 1e7;
 static const double INVERSE_TRIGAMMA_Y_SMALL = 1e-6;
 static const double INVERSE_TRIGAMMA_REL_TOL = 1e-12;
+static const double INVERSE_TRIGAMMA_FUNC_REL_TOL = 16.0 * DBL_EPSILON;
 static const int INVERSE_TRIGAMMA_NEWTON_MAX_ITER = 50;
 static const int INVERSE_TRIGAMMA_BISECT_MAX_ITER = 200;
 static const double TRIGAMMA_AE_1 = 1.0;
@@ -218,6 +233,7 @@ double itrigamma(double y)
     double upperBound;
     double lowerResidual;
     double upperResidual;
+    double funcTol = INVERSE_TRIGAMMA_FUNC_REL_TOL * fmax(y, 1.0);
 
     if (isnan(y))
         return NAN;
@@ -227,7 +243,8 @@ double itrigamma(double y)
         return 0.0;
     if (!(y > 0.0))
         return NAN;
-
+    if (y < INVERSE_TRIGAMMA_Y_SMALL)
+        return 1.0 / y + 0.5;
     /*
      * early-exits -- use expansions for large and small
      */
@@ -309,6 +326,8 @@ double itrigamma(double y)
                 functionValue = -y;
         }
 
+        if (fabs(functionValue) <= funcTol)
+            return currentX;
         if (functionValue > 0.0) {
             lowerBound = currentX;
             lowerResidual = functionValue;
@@ -354,10 +373,12 @@ double itrigamma(double y)
         double midpointResidual;
         double boundedInterval;
         double midpointTolerance;
-
+        double funcTol = INVERSE_TRIGAMMA_FUNC_REL_TOL * fmax(y, 1.0);
         midpoint = 0.5 * (lowerBound + upperBound);
         midpointResidual = trigamma(midpoint) - y;
 
+        if (fabs(midpointResidual) <= funcTol)
+            return midpoint;
         if (!isfinite(midpointResidual))
             return NAN;
 
@@ -375,4 +396,23 @@ double itrigamma(double y)
     }
 
     return 0.5 * (lowerBound + upperBound);
+}
+
+/*vectorization: trigamma, tetragamma, inverse*/
+void trigamma_vec(const double *x, double *out, size_t n)
+{
+for (size_t i = 0; i < n; i++)
+out[i] = trigamma(x[i]);
+}
+
+void tetragamma_vec(const double *x, double *out, size_t n)
+{
+for (size_t i = 0; i < n; i++)
+out[i] = tetragamma(x[i]);
+}
+
+void itrigamma_vec(const double *y, double *out, size_t n)
+{
+for (size_t i = 0; i < n; i++)
+out[i] = itrigamma(y[i]);
 }
