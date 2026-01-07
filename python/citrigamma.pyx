@@ -4,13 +4,9 @@ cimport numpy as np
 from libc.stddef cimport size_t
 
 cdef extern from "itrigamma.h":
-    double itrigamma(double y)
     void itrigamma_vec(const double *y, double *out, size_t n)
 
-cpdef double itrigamma_scalar(double y):
-    return itrigamma(y)
-
-def itrigamma_np(y):
+def itrigamma(y):
     cdef np.ndarray[np.float64_t, ndim=1, mode="c"] y1
     cdef np.ndarray[np.float64_t, ndim=1, mode="c"] out1
     cdef size_t n
@@ -24,4 +20,8 @@ def itrigamma_np(y):
     n = <size_t> y1.size
     itrigamma_vec(<const double*> y1.data, <double*> out1.data, n)
 
-    return out1.reshape(shape)
+    out = out1.reshape(shape)
+    # for scalars
+    if shape == ():
+        return float(out[()])
+    return out
