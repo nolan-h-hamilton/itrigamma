@@ -5,11 +5,11 @@
 /*
 References:
 
-    - All recurrences, asymptotic expansions can be found in Abramowitz & Stegun, "Handbook of Mathematical Functions", Section 6.4
-    - An overview of Euler-Maclaurin summation can be found in Chapter 4 of Sedgewick & Flajolet, "An Introduction to the Analysis of Algorithms"
+- All recurrences, asymptotic expansions can be found in Abramowitz & Stegun, "Handbook of Mathematical Functions", Section 6.4
+- An overview of Euler-Maclaurin summation can be found in Chapter 4 of Sedgewick & Flajolet, "An Introduction to the Analysis of Algorithms"
 
 -----------
-The variance of a random variable log(X), where X ~ chi^2(d)$ is trigamma(d/2).
+The variance of a random variable log(X), where X ~ chi^2(d) is trigamma(d/2).
 
 To solve
 
@@ -250,8 +250,6 @@ double itrigamma(double y)
      */
     if (y > INVERSE_TRIGAMMA_Y_BIG)
         return 1.0 / sqrt(y);
-    if (y < INVERSE_TRIGAMMA_Y_SMALL)
-        return 1.0 / y;
 
     minX = eps_invSqrtX();
     if (y < 1.0)
