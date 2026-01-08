@@ -1,8 +1,9 @@
 # itrigamma
 
-A self-contained implementation of the inverse-trigamma function used in variational inference, empirical bayes, etc.
+A self-contained implementation of the inverse-trigamma function, $\psi'^{-1}$, for use in variational inference, empirical bayes, and other settings involving variance estimation wrt log-gamma random variables.
 
-* Written in C with fast bindings for Python (`python/citrigamma.pyx`) and R (`r/RCall_itrigamma.c`).
+
+Written in C with fast bindings for Python (`python/citrigamma.pyx`) and R (`r/RCall_itrigamma.c`).
 
 **Install**
 
