@@ -61,7 +61,7 @@ SEXP itrigamma_pos_tetragamma(SEXP x)
     return out;
 }
 
-SEXP itrigamma_itrigamma(SEXP y)
+SEXP r_itrigamma(SEXP y)
 {
     int protectCount = 0;
     if (!isReal(y)) {
