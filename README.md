@@ -1,8 +1,8 @@
 # itrigamma
 
-A self-contained implementation of the inverse-trigamma function, $\psi'^{-1}$, for inference on log-gamma random variables, etc.
+A self-contained implementation of the inverse-trigamma function, $\psi'^{-1}$, for analyses involving log-gamma random variables, etc.
 
-Written in C with fast bindings for
+Written in C with basic interfaces/bindings for:
 
 * **Python** (`python/citrigamma.pyx`)
 * **R** (`r/RCall_itrigamma.c`)
@@ -81,25 +81,21 @@ Clone the repository:
   cd itrigamma
   ```
 
-You can build with base R's [r/utils/SHLIB](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/SHLIB.html) utility as:
+Build with base R's [r/utils/SHLIB](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/SHLIB.html) utility as:
 
   ```bash
-  PKG_CPPFLAGS="-I$(pwd)/src" R CMD SHLIB r/RCall_itrigamma.c src/itrigamma.c -o r_itrigamma.so
+  PKG_CPPFLAGS="-I$(pwd)/src" R CMD SHLIB r/RCall_itrigamma.c src/itrigamma.c -o r_itrigamma.so # r_trigamma.dll for windows
   ```
 
-This yields a shared library binary `r_itrigamma.so`. Load it within R using `dyn.load("r_itrigamma.so")`.
-
 ### Test (R)
-
-Within R, you can then load the shared library and use base R's [.Call](https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Interface-functions-_002eCall-and-_002eExternal) for a simple wrapper,
 
   ```R
   dyn.load("r_itrigamma.so")
 
-  # Easiest: Write a simple wrapper around .Call, e.g.,
+  # e.g., write a simple wrapper around .Call
   itrigamma = function(x) .Call("r_itrigamma", x)
 
-  # Test
+
   x_ = seq(1.0e-8, 100, length.out = 50)
 
   y = itrigamma(x_)
