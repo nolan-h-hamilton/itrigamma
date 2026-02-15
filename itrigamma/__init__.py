@@ -1,4 +1,4 @@
-from .citrigamma import itrigamma
+from .citrigamma import itrigamma, digamma, trigamma, tetragamma
 
-__all__ = ["itrigamma"]
-__version__ = "0.1.1a0"
+__all__ = ["itrigamma", "digamma", "trigamma", "tetragamma"]
+__version__ = "0.2.0a0"

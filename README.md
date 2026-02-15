@@ -1,6 +1,7 @@
 # itrigamma
 
 A self-contained implementation of the inverse-trigamma function, $\psi'^{-1}$, for inference on log-gamma random variables, etc.
+Related polygamma functions are also implemented in the C backend, e.g., $\psi$ (digamma), $\psi'$ (trigamma), and $\psi''$ (tetragamma).
 
 Written in C with fast bindings for
 

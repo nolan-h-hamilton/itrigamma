@@ -80,11 +80,79 @@ static const double TETRAGAMMA_AE_10 = 3.0 / 10.0;
 static const double TETRAGAMMA_AE_12 = -5.0 / 6.0;
 static const double TETRAGAMMA_AE_14 = 691.0 / 210.0;
 static const double TETRAGAMMA_AE_16 = -35.0 / 2.0;
+static const double DIGAMMA_AE_1  = -0.5;                 /* -1/(2x) */
+static const double DIGAMMA_AE_2  = -1.0 / 12.0;          /* -1/(12 x^2) */
+static const double DIGAMMA_AE_4  =  1.0 / 120.0;         /* +1/(120 x^4) */
+static const double DIGAMMA_AE_6  = -1.0 / 252.0;         /* -1/(252 x^6) */
+static const double DIGAMMA_AE_8  =  1.0 / 240.0;         /* +1/(240 x^8) */
+static const double DIGAMMA_AE_10 = -5.0 / 660.0;         /* -5/(660 x^10) */
+static const double DIGAMMA_AE_12 =  691.0 / 32760.0;     /* +691/(32760 x^12) */
 
 static inline double eps_invSqrtX(void)
 {
     /*smallest x such that 1/(x*x) will not overflow*/
     return 1.0 / sqrt(DBL_MAX);
+}
+
+double pos_digamma(double x)
+{
+    double result;
+    double invX, invX2;
+    double invP; /* reciprocal powers */
+
+    if (isnan(x))
+        return NAN;
+    if (x == INFINITY)
+        return INFINITY;
+    if (!(x > 0.0))
+        return NAN;
+
+    /* digamma -> -infty as x -> 0+ */
+    if (x <= DBL_MIN)
+        return -INFINITY;
+
+    result = 0.0;
+
+    /*
+     * (I) Recurrence up to BEGIN_ASYMPTOTIC:
+     * psi(x) = psi(x+1) - 1/x
+     */
+    while (x < BEGIN_ASYMPTOTIC) {
+        result -= 1.0 / x;
+        x += 1.0;
+    }
+
+    /*
+     * (II) Asymptotic expansion:
+     * psi(x) ~ log(x) - 1/(2x) - 1/(12x^2) + 1/(120x^4) - 1/(252x^6) + ...
+     */
+    invX  = 1.0 / x;
+    invX2 = invX * invX;
+
+    result += log(x);
+
+    invP = invX;               /* 1/x */
+    result += DIGAMMA_AE_1 * invP;
+
+    invP = invX2;              /* 1/x^2 */
+    result += DIGAMMA_AE_2 * invP;
+
+    invP *= invX2;             /* 1/x^4 */
+    result += DIGAMMA_AE_4 * invP;
+
+    invP *= invX2;             /* 1/x^6 */
+    result += DIGAMMA_AE_6 * invP;
+
+    invP *= invX2;             /* 1/x^8 */
+    result += DIGAMMA_AE_8 * invP;
+
+    invP *= invX2;             /* 1/x^10 */
+    result += DIGAMMA_AE_10 * invP;
+
+    invP *= invX2;             /* 1/x^12 */
+    result += DIGAMMA_AE_12 * invP;
+
+    return result;
 }
 
 double pos_trigamma(double x)
@@ -388,7 +456,14 @@ double itrigamma(double y)
     return 0.5 * (lowerBound + upperBound);
 }
 
-/*vectorization: trigamma, tetragamma, inverse*/
+/*vectorization: digamma, trigamma, tetragamma, inverse*/
+
+void pos_digamma_vec(const double *x, double *out, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+        out[i] = pos_digamma(x[i]);
+}
+
 void pos_trigamma_vec(const double *x, double *out, size_t n)
 {
 for (size_t i = 0; i < n; i++)
