@@ -1,0 +1,81 @@
+name: tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pythonVersion: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pythonVersion }}
+          cache: pip
+
+      - run: |
+          python -m pip install --upgrade pip
+          python -m pip install build wheel setuptools cython numpy scipy
+
+      - run: python -m build
+
+      - run: python -m pip install .
+
+      - run: |
+          python - <<'PY'
+          import time, math, numpy as np
+          import scipy.special as sp
+          from itrigamma import itrigamma, digamma, trigamma, tetragamma
+
+          known = [
+              (1.0e-8, 100000000.499999999167),
+              (0.05, 20.49583523915460591),
+              (0.10, 10.491681821078422372),
+              (0.20, 5.4834517798530476662),
+              (0.50, 2.4599529483523074137),
+              (1.00, 1.4262551202150789904),
+              (2.00, 0.87666407746426017692),
+              (5.00, 0.49616873470410694489),
+              (10.0, 0.33508104437803564513),
+              (20.0, 0.23077632915242632912),
+              (50.0, 0.14337981235286147770),
+          ]
+          for i, (x0, y0) in enumerate(known):
+              got = float(itrigamma(x0))
+              assert math.isclose(got, y0, abs_tol=1e-12), (i, x0, got, y0)
+
+          refDigamma = lambda x: float(sp.digamma(x))
+          refTrigamma = lambda x: float(sp.polygamma(1, x))
+          refTetragamma = lambda x: float(sp.polygamma(2, x))
+
+          xs = np.array([1e-12, 1e-8, 1e-4, 1e-2, 0.1, 0.5, 1.0, 2.0, 10.0, 1e3], dtype=float)
+
+          def check(fn, refFn, xs, absTol, relTol):
+              for x in xs:
+                  got = float(fn(x))
+                  exp = float(refFn(x))
+                  assert math.isclose(got, exp, rel_tol=relTol, abs_tol=absTol), (x, got, exp)
+
+          check(digamma, refDigamma, xs, absTol=5e-12, relTol=5e-12)
+          check(trigamma, refTrigamma, xs, absTol=5e-12, relTol=5e-12)
+          check(tetragamma, refTetragamma, xs, absTol=1e-6, relTol=5e-12)
+
+          rng = np.random.default_rng(0)
+          a = rng.random((128, 64)) + 1e-6
+          for fn in (digamma, trigamma, tetragamma, itrigamma):
+              out = fn(a)
+              assert isinstance(out, np.ndarray)
+              assert out.shape == a.shape
+
+          x = np.random.default_rng(0).random(100_000)
+          t0 = time.perf_counter()
+          _ = itrigamma(x)
+          dt = time.perf_counter() - t0
+          assert dt < 10.0
+          PY
